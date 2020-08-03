@@ -7,6 +7,7 @@ using BasicTestApp.RouterTest;
 using Microsoft.AspNetCore.Components.E2ETest.Infrastructure;
 using Microsoft.AspNetCore.Components.E2ETest.Infrastructure.ServerFixtures;
 using Microsoft.AspNetCore.E2ETesting;
+using Microsoft.AspNetCore.Testing;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
@@ -35,6 +36,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         }
 
         [Fact]
+        [QuarantinedTest("https://github.com/dotnet/aspnetcore/issues/23856")]
         public void CanLazyLoadOnRouteChange()
         {
             // Navigate to a page without any lazy-loaded dependencies
@@ -59,6 +61,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         }
 
         [Fact]
+        [QuarantinedTest("https://github.com/dotnet/aspnetcore/issues/23856")]
         public void CanLazyLoadOnFirstVisit()
         {
             // Navigate to a page with lazy loaded assemblies for the first time
@@ -108,6 +111,21 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
             Assert.True(renderedElement.Displayed);
         }
 
+        [Fact]
+        public void ThrowsErrorForUnavailableAssemblies()
+        {
+            // Navigate to a page with lazy loaded assemblies for the first time
+            SetUrlViaPushState("/Other");
+            var app = Browser.MountTestComponent<TestRouterWithLazyAssembly>();
+
+            // Should've thrown an error for unhandled error
+            var errorUiElem = Browser.Exists(By.Id("blazor-error-ui"), TimeSpan.FromSeconds(10));
+            Assert.NotNull(errorUiElem);
+
+
+            AssertLogContainsCriticalMessages("DoesNotExist.dll must be marked with 'BlazorWebAssemblyLazyLoad' item group in your project file to allow lazy-loading.");
+        }
+
         private string SetUrlViaPushState(string relativeUri)
         {
             var pathBaseWithoutHash = ServerPathBase.Split('#')[0];
@@ -136,6 +154,19 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
             foreach (var message in messages)
             {
                 Assert.DoesNotContain(log, entry =>
+                {
+                    return entry.Level == LogLevel.Severe
+                    && entry.Message.Contains(message);
+                });
+            }
+        }
+
+        void AssertLogContainsCriticalMessages(params string[] messages)
+        {
+            var log = Browser.Manage().Logs.GetLog(LogType.Browser);
+            foreach (var message in messages)
+            {
+                Assert.Contains(log, entry =>
                 {
                     return entry.Level == LogLevel.Severe
                     && entry.Message.Contains(message);

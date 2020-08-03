@@ -5,7 +5,6 @@ import { WebAssemblyResourceLoader, LoadingResource } from '../WebAssemblyResour
 import { Platform, System_Array, Pointer, System_Object, System_String, HeapLock } from '../Platform';
 import { loadTimezoneData } from './TimezoneDataFile';
 import { WebAssemblyBootResourceType } from '../WebAssemblyStartOptions';
-import { initializeProfiling } from '../Profiling';
 
 let mono_wasm_add_assembly: (name: string, heapAddress: number, length: number) => void;
 const appBinDirName = 'appBinDir';
@@ -36,10 +35,6 @@ export const monoPlatform: Platform = {
   start: function start(resourceLoader: WebAssemblyResourceLoader) {
     return new Promise<void>((resolve, reject) => {
       attachDebuggerHotkey(resourceLoader);
-      initializeProfiling(isCapturing => {
-        const setCapturingMethod = bindStaticMethod('Microsoft.AspNetCore.Components', 'Microsoft.AspNetCore.Components.Profiling.WebAssemblyComponentsProfiling', 'SetCapturing');
-        setCapturingMethod(isCapturing);
-      });
 
       // dotnet.js assumes the existence of this
       window['Browser'] = {
@@ -324,9 +319,18 @@ function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourceLoade
       const assembliesToLoad = BINDING.mono_array_to_js_array<System_String, string>(assembliesToLoadDotNetArray);
       const lazyAssemblies = resourceLoader.bootConfig.resources.lazyAssembly;
 
-      if (lazyAssemblies) {
-        const resourcePromises = Promise.all(assembliesToLoad
-            .filter(assembly => lazyAssemblies.hasOwnProperty(assembly))
+      if (!lazyAssemblies) {
+        throw new Error("No assemblies have been marked as lazy-loadable. Use the 'BlazorWebAssemblyLazyLoad' item group in your project file to enable lazy loading an assembly.");
+      }
+
+      var assembliesMarkedAsLazy = assembliesToLoad.filter(assembly => lazyAssemblies.hasOwnProperty(assembly));
+
+      if (assembliesMarkedAsLazy.length != assembliesToLoad.length) {
+        var notMarked = assembliesToLoad.filter(assembly => !assembliesMarkedAsLazy.includes(assembly));
+        throw new Error(`${notMarked.join()} must be marked with 'BlazorWebAssemblyLazyLoad' item group in your project file to allow lazy-loading.`);
+      }
+
+      const resourcePromises = Promise.all(assembliesMarkedAsLazy
             .map(assembly => resourceLoader.loadResource(assembly, `_framework/${assembly}`, lazyAssemblies[assembly], 'assembly'))
             .map(async resource => (await resource.response).arrayBuffer()));
 
@@ -345,8 +349,6 @@ function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourceLoade
           return resourcesToLoad.length;
         }));
       }
-      return BINDING.js_to_mono_obj(Promise.resolve(0));
-    }
   });
 
   module.postRun.push(() => {
@@ -356,6 +358,7 @@ function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourceLoade
     resourceLoader.purgeUnusedCacheEntriesAsync(); // Don't await - it's fine to run in background
 
     MONO.mono_wasm_setenv("MONO_URI_DOTNETRELATIVEORABSOLUTE", "true");
+    MONO.mono_wasm_setenv("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "1");
     const load_runtime = cwrap('mono_wasm_load_runtime', null, ['string', 'number']);
     // -1 enables debugging with logging disabled. 0 disables debugging entirely.
     load_runtime(appBinDirName, hasDebuggingEnabled() ? -1 : 0);

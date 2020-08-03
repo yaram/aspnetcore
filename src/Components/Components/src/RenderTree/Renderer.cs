@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.Profiling;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -247,7 +246,6 @@ namespace Microsoft.AspNetCore.Components.RenderTree
         /// </returns>
         public virtual Task DispatchEventAsync(ulong eventHandlerId, EventFieldInfo fieldInfo, EventArgs eventArgs)
         {
-            ComponentsProfiling.Instance.Start();
             Dispatcher.AssertAccess();
 
             if (!_eventBindings.TryGetValue(eventHandlerId, out var callback))
@@ -275,7 +273,6 @@ namespace Microsoft.AspNetCore.Components.RenderTree
             catch (Exception e)
             {
                 HandleException(e);
-                ComponentsProfiling.Instance.End();
                 return Task.CompletedTask;
             }
             finally
@@ -290,7 +287,6 @@ namespace Microsoft.AspNetCore.Components.RenderTree
             // Task completed synchronously or is still running. We already processed all of the rendering
             // work that was queued so let our error handler deal with it.
             var result = GetErrorHandledTask(task);
-            ComponentsProfiling.Instance.End();
             return result;
         }
 
@@ -441,7 +437,6 @@ namespace Microsoft.AspNetCore.Components.RenderTree
 
         private void ProcessRenderQueue()
         {
-            ComponentsProfiling.Instance.Start();
             Dispatcher.AssertAccess();
 
             if (_isBatchInProgress)
@@ -456,7 +451,6 @@ namespace Microsoft.AspNetCore.Components.RenderTree
             {
                 if (_batchBuilder.ComponentRenderQueue.Count == 0)
                 {
-                    ComponentsProfiling.Instance.End();
                     return;
                 }
 
@@ -468,9 +462,7 @@ namespace Microsoft.AspNetCore.Components.RenderTree
                 }
 
                 var batch = _batchBuilder.ToBatch();
-                ComponentsProfiling.Instance.Start(nameof(UpdateDisplayAsync));
                 updateDisplayTask = UpdateDisplayAsync(batch);
-                ComponentsProfiling.Instance.End(nameof(UpdateDisplayAsync));
 
                 // Fire off the execution of OnAfterRenderAsync, but don't wait for it
                 // if there is async work to be done.
@@ -480,7 +472,6 @@ namespace Microsoft.AspNetCore.Components.RenderTree
             {
                 // Ensure we catch errors while running the render functions of the components.
                 HandleException(e);
-                ComponentsProfiling.Instance.End();
                 return;
             }
             finally
@@ -498,7 +489,6 @@ namespace Microsoft.AspNetCore.Components.RenderTree
             {
                 ProcessRenderQueue();
             }
-            ComponentsProfiling.Instance.End();
         }
 
         private Task InvokeRenderCompletedCalls(ArrayRange<RenderTreeDiff> updatedComponents, Task updateDisplayTask)
@@ -634,11 +624,43 @@ namespace Microsoft.AspNetCore.Components.RenderTree
                 var disposeComponentId = _batchBuilder.ComponentDisposalQueue.Dequeue();
                 var disposeComponentState = GetRequiredComponentState(disposeComponentId);
                 Log.DisposingComponent(_logger, disposeComponentState);
-                if (!disposeComponentState.TryDisposeInBatch(_batchBuilder, out var exception))
+                if (!(disposeComponentState.Component is IAsyncDisposable))
                 {
-                    exceptions ??= new List<Exception>();
-                    exceptions.Add(exception);
+                    if (!disposeComponentState.TryDisposeInBatch(_batchBuilder, out var exception))
+                    {
+                        exceptions ??= new List<Exception>();
+                        exceptions.Add(exception);
+                    }
                 }
+                else
+                {
+                    var result = disposeComponentState.DisposeInBatchAsync(_batchBuilder);
+                    if (result.IsCompleted)
+                    {
+                        if (!result.IsCompletedSuccessfully)
+                        {
+                            exceptions ??= new List<Exception>();
+                            exceptions.Add(result.Exception);
+                        }
+                    }
+                    else
+                    {
+                        AddToPendingTasks(GetHandledAsynchronousDisposalErrorsTask(result));
+
+                        async Task GetHandledAsynchronousDisposalErrorsTask(Task result)
+                        {
+                            try
+                            {
+                                await result;
+                            }
+                            catch (Exception e)
+                            {
+                                HandleException(e);
+                            }
+                        }
+                    }
+                }
+
                 _componentStateById.Remove(disposeComponentId);
                 _batchBuilder.DisposedComponentIds.Append(disposeComponentId);
             }

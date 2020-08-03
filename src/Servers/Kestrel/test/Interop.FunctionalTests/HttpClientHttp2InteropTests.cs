@@ -1416,7 +1416,6 @@ namespace Interop.FunctionalTests
         // Settings_InitialWindowSize_Lower_Client - Not configurable.
 
         [Theory]
-        [QuarantinedTest]
         [MemberData(nameof(SupportedSchemes))]
         public async Task Settings_InitialWindowSize_Server(string scheme)
         {
@@ -1496,7 +1495,6 @@ namespace Interop.FunctionalTests
 
         [Theory]
         [MemberData(nameof(SupportedSchemes))]
-        [QuarantinedTest]
         public async Task ConnectionWindowSize_Server(string scheme)
         {
             var requestFinished = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);

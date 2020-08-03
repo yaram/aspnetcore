@@ -4,6 +4,7 @@
 #nullable disable warnings
 
 using System;
+using System.Runtime.ExceptionServices;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -30,6 +31,8 @@ namespace Microsoft.AspNetCore.Components.Routing
         ILogger<Router> _logger;
 
         private CancellationTokenSource _onNavigateCts;
+
+        private Task _previousOnNavigateTask = Task.CompletedTask;
 
         private readonly HashSet<Assembly> _assemblies = new HashSet<Assembly>();
 
@@ -65,12 +68,12 @@ namespace Microsoft.AspNetCore.Components.Routing
         /// <summary>
         /// Get or sets the content to display when asynchronous navigation is in progress.
         /// </summary>
-        [Parameter] public RenderFragment Navigating { get; set; }
+        [Parameter] public RenderFragment? Navigating { get; set; }
 
         /// <summary>
         /// Gets or sets a handler that should be called before navigating to a new page.
         /// </summary>
-        [Parameter] public EventCallback<NavigationContext> OnNavigateAsync { get; set; }
+        [Parameter] public Func<NavigationContext, Task>? OnNavigateAsync { get; set; }
 
         private RouteTable Routes { get; set; }
 
@@ -112,7 +115,8 @@ namespace Microsoft.AspNetCore.Components.Routing
             if (!_onNavigateCalled)
             {
                 _onNavigateCalled = true;
-                await RunOnNavigateAsync(NavigationManager.ToBaseRelativePath(_locationAbsolute));
+                await RunOnNavigateWithRefreshAsync(NavigationManager.ToBaseRelativePath(_locationAbsolute), isNavigationIntercepted: false);
+                return;
             }
 
             Refresh(isNavigationIntercepted: false);
@@ -122,7 +126,6 @@ namespace Microsoft.AspNetCore.Components.Routing
         public void Dispose()
         {
             NavigationManager.LocationChanged -= OnLocationChanged;
-            _onNavigateCts?.Dispose();
         }
 
         private static string StringUntilAny(string str, char[] chars)
@@ -147,8 +150,21 @@ namespace Microsoft.AspNetCore.Components.Routing
 
         }
 
-        private void Refresh(bool isNavigationIntercepted)
+        internal virtual void Refresh(bool isNavigationIntercepted)
         {
+            // If an `OnNavigateAsync` task is currently in progress, then wait
+            // for it to complete before rendering. Note: because _previousOnNavigateTask
+            // is initialized to a CompletedTask on initialization, this will still
+            // allow first-render to complete successfully.
+            if (_previousOnNavigateTask.Status != TaskStatus.RanToCompletion)
+            {
+                if (Navigating != null)
+                {
+                    _renderHandle.Render(Navigating);
+                }
+                return;
+            }
+
             RefreshRouteTable();
 
             var locationPath = NavigationManager.ToBaseRelativePath(_locationAbsolute);
@@ -190,44 +206,70 @@ namespace Microsoft.AspNetCore.Components.Routing
             }
         }
 
-        private async Task RunOnNavigateAsync(string path)
+        private async ValueTask<bool> RunOnNavigateAsync(string path, Task previousOnNavigate)
         {
-            // If this router instance does not provide an OnNavigateAsync parameter
-            // then we render the component associated with the route as per usual.
-            if (!OnNavigateAsync.HasDelegate)
+
+            // Cancel the CTS instead of disposing it, since disposing does not
+            // actually cancel and can cause unintended Object Disposed Exceptions.
+            // This effectivelly cancels the previously running task and completes it.
+            _onNavigateCts?.Cancel();
+            // Then make sure that the task has been completely cancelled or completed
+            // before starting the next one. This avoid race conditions where the cancellation
+            // for the previous task was set but not fully completed by the time we get to this
+            // invocation.
+            await previousOnNavigate;
+
+            if (OnNavigateAsync == null)
             {
-                return;
+                return true;
             }
 
-            // If we've already invoked a task and stored its CTS, then
-            // cancel the existing task.
-            _onNavigateCts?.Dispose();
-
-            // Create a new cancellation token source for this instance
             _onNavigateCts = new CancellationTokenSource();
             var navigateContext = new NavigationContext(path, _onNavigateCts.Token);
 
-            // Create a cancellation task based on the cancellation token
-            // associated with the current running task.
-            var cancellationTaskSource = new TaskCompletionSource();
-            navigateContext.CancellationToken.Register(state =>
-                ((TaskCompletionSource)state).SetResult(), cancellationTaskSource);
-
-            var task = OnNavigateAsync.InvokeAsync(navigateContext);
-
-            // If the user provided a Navigating render fragment, then show it.
-            if (Navigating != null && task.Status != TaskStatus.RanToCompletion)
+            try
             {
-                _renderHandle.Render(Navigating);
+                if (Navigating != null)
+                {
+                    _renderHandle.Render(Navigating);
+                }
+                await OnNavigateAsync(navigateContext);
+                return true;
+            }
+            catch (OperationCanceledException e)
+            {
+                if (e.CancellationToken != navigateContext.CancellationToken)
+                {
+                    var rethrownException = new InvalidOperationException("OnNavigateAsync can only be cancelled via NavigateContext.CancellationToken.", e);
+                    _renderHandle.Render(builder => ExceptionDispatchInfo.Throw(rethrownException));
+                }
+            }
+            catch (Exception e)
+            {
+                _renderHandle.Render(builder => ExceptionDispatchInfo.Throw(e));
             }
 
-            await Task.WhenAny(task, cancellationTaskSource.Task);
+            return false;
         }
 
-        private async Task RunOnNavigateWithRefreshAsync(string path, bool isNavigationIntercepted)
+        internal async Task RunOnNavigateWithRefreshAsync(string path, bool isNavigationIntercepted)
         {
-            await RunOnNavigateAsync(path);
-            Refresh(isNavigationIntercepted);
+            // We cache the Task representing the previously invoked RunOnNavigateWithRefreshAsync
+            // that is stored. Then we create a new one that represents our current invocation and store it
+            // globally for the next invocation. This allows us to check inside `RunOnNavigateAsync` if the
+            // previous OnNavigateAsync task has fully completed before starting the next one.
+            var previousTask = _previousOnNavigateTask;
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _previousOnNavigateTask = tcs.Task;
+
+            // And pass an indicator for the previous task to the currently running one.
+            var shouldRefresh = await RunOnNavigateAsync(path, previousTask);
+            tcs.SetResult();
+            if (shouldRefresh)
+            {
+                Refresh(isNavigationIntercepted);
+            }
+
         }
 
         private void OnLocationChanged(object sender, LocationChangedEventArgs args)

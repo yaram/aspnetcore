@@ -19,7 +19,6 @@ namespace WebApplication
         {
             var connectionStringBuilder = new SqliteConnectionStringBuilder { DataSource = "./TestDb1.db" };
             services.AddDbContext<BlogContext>(options => options.UseSqlite(connectionStringBuilder.ConnectionString));
-            //services.AddSingleton<IDeveloperPageExceptionFilter, DatabaseErrorFilter>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -28,9 +27,6 @@ namespace WebApplication
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-#pragma warning disable CS0618
-                app.UseDatabaseErrorPage();
-#pragma warning restore CS0618
             }
 
             app.UseRouting();
@@ -43,10 +39,12 @@ namespace WebApplication
 
                     //blogContext.Blogs.Add(new Blog { Name = "TestBlog" });
                     //blogContext.SaveChanges();
-                    //blogContext.Blogs.Add(new Blog { Name = "TestBlog", Name2 = "Subname"});
+                    //blogContext.Blogs.Add(new Blog { Name = "TestBlog", Name2 = "Subname" });
                     //blogContext.SaveChanges();
 
-                    await context.Response.WriteAsync($"Hello World! {blogContext.Blogs.FirstOrDefault()?.Name}");
+                    var blogs = blogContext.Blogs.Select(b => $"{b.Name}:{b.Name2}:{b.Name3}").ToList().Aggregate((a, b) => $"{a}, {b}");
+
+                    await context.Response.WriteAsync($"Hello World! {blogs}");
                 });
             });
         }

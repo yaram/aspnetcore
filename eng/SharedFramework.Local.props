@@ -13,6 +13,7 @@
     <AspNetCoreAppReferenceAndPackage Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" />
     <AspNetCoreAppReferenceAndPackage Include="Microsoft.AspNetCore.DataProtection" />
     <AspNetCoreAppReferenceAndPackage Include="Microsoft.AspNetCore.DataProtection.Extensions" />
+    <AspNetCoreAppReferenceAndPackage Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
     <AspNetCoreAppReferenceAndPackage Include="Microsoft.AspNetCore.Http.Features" />
     <AspNetCoreAppReferenceAndPackage Include="Microsoft.AspNetCore.Metadata" />
     <AspNetCoreAppReferenceAndPackage Include="Microsoft.Extensions.Identity.Core" />

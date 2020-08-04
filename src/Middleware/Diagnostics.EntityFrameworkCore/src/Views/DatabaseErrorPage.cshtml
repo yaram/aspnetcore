@@ -1,4 +1,4 @@
-@using System
+﻿@using System
 @using System.Linq
 @using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
 @using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore.Views
@@ -69,7 +69,7 @@
             </div>
         }
 
-        var contextWithPendingMigrations = Model.ContextDetails.Where(c => c.PendingMigrations.Any());
+        var contextWithPendingMigrations = Model.ContextDetails.Where(c => c.PendingMigrations.Any()).Except(contextWithNoDBOrMigrations);
         if (contextWithPendingMigrations.Any())
         {
             <div>
@@ -135,7 +135,7 @@
             </div>
         }
 
-        var contextWithPendingModelChanges = Model.ContextDetails.Where(c => c.PendingModelChanges);
+        var contextWithPendingModelChanges = Model.ContextDetails.Where(c => c.PendingModelChanges).Except(contextWithNoDBOrMigrations).Except(contextWithPendingMigrations);
         if (contextWithPendingModelChanges.Any())
         {
             <div>

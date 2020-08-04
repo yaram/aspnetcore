@@ -56,6 +56,7 @@ namespace Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
         ///     consumes them to detect database related exception.
         /// </param>
         /// <param name="options">The options to control what information is displayed on the error page.</param>
+        [Obsolete("This is obsolete and will be removed in a future version. Use DatabaseExceptionHandler instead.")]
         public DatabaseErrorPageMiddleware(
             RequestDelegate next,
             ILoggerFactory loggerFactory,

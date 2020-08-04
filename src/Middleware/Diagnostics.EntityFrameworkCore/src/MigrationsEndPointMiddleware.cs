@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
 {
@@ -111,12 +110,7 @@ namespace Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
             var form = await context.Request.ReadFormAsync();
             var contextTypeName = form["context"];
 
-            // TODO: Decouple
-            // Look for DbContext classes registered in the service provider
-            var registeredContexts = context.RequestServices.GetServices<DbContextOptions>()
-                .Select(o => o.ContextType);
-
-            if (string.IsNullOrWhiteSpace(contextTypeName) || !registeredContexts.Any(c => string.Equals(contextTypeName, c.AssemblyQualifiedName)))
+            if (string.IsNullOrWhiteSpace(contextTypeName))
             {
                 logger.NoContextType();
 
@@ -125,32 +119,26 @@ namespace Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
                 return null;
             }
 
-            var contextType = Type.GetType(contextTypeName);
+            // TODO: Decouple
+            // Look for DbContext classes registered in the service provider
+            var registeredContexts = context.RequestServices.GetServices<DbContextOptions>()
+                .Select(o => o.ContextType);
 
-            if (contextType == null)
+            if (!registeredContexts.Any(c => string.Equals(contextTypeName, c.AssemblyQualifiedName)))
             {
-                var message = Strings.FormatMigrationsEndPointMiddleware_InvalidContextType(contextTypeName);
+                var message = Strings.FormatMigrationsEndPointMiddleware_ContextNotRegistered(contextTypeName);
 
-                logger.InvalidContextType(contextTypeName);
+                logger.ContextNotRegistered(contextTypeName);
 
                 await WriteErrorToResponse(context.Response, message);
 
                 return null;
             }
+
+            var contextType = Type.GetType(contextTypeName);
 
             // TODO: Decouple
             var db = (DbContext)context.RequestServices.GetService(contextType);
-
-            if (db == null)
-            {
-                var message = Strings.FormatMigrationsEndPointMiddleware_ContextNotRegistered(contextType.FullName);
-
-                logger.ContextNotRegistered(contextType.FullName);
-
-                await WriteErrorToResponse(context.Response, message);
-
-                return null;
-            }
 
             return db;
         }

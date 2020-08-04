@@ -283,7 +283,7 @@ body .titleerror {
 #line 148 "DatabaseErrorPage.cshtml"
         }
 
-        var contextWithPendingMigrations = Model.ContextDetails.Where(c => c.PendingMigrations.Any());
+        var contextWithPendingMigrations = Model.ContextDetails.Where(c => c.PendingMigrations.Any()).Except(contextWithNoDBOrMigrations);
         if (contextWithPendingMigrations.Any())
         {
 
@@ -475,7 +475,7 @@ body .titleerror {
 #line 214 "DatabaseErrorPage.cshtml"
         }
 
-        var contextWithPendingModelChanges = Model.ContextDetails.Where(c => c.PendingModelChanges);
+        var contextWithPendingModelChanges = Model.ContextDetails.Where(c => c.PendingModelChanges).Except(contextWithNoDBOrMigrations).Except(contextWithPendingMigrations);
         if (contextWithPendingModelChanges.Any())
         {
 

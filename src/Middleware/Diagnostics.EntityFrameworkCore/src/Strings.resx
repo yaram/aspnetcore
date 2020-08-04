@@ -166,13 +166,10 @@
     <value>&gt; dotnet ef database update</value>
   </data>
   <data name="MigrationsEndPointMiddleware_ContextNotRegistered" xml:space="preserve">
-    <value>The context type '{0}' was not found in services. This usually means the context was not registered in services during startup. You probably want to call AddScoped&lt;{0}&gt;() inside the UseServices(...) call in your application startup code.</value>
+    <value>The context type '{0}' was not found in services. This usually means either the context is invalid or it was not registered in services during startup. You probably want to call AddDBContext&lt;&gt;() inside the ConfigureServices(...) call in your application startup code.</value>
   </data>
   <data name="MigrationsEndPointMiddleware_Exception" xml:space="preserve">
     <value>An error occurred while applying the migrations for '{0}'. See InnerException for details.</value>
-  </data>
-  <data name="MigrationsEndPointMiddleware_InvalidContextType" xml:space="preserve">
-    <value>The context type '{0}' could not be loaded. Ensure this is the correct type name for the context you are trying to apply migrations for.</value>
   </data>
   <data name="MigrationsEndPointMiddleware_NoContextType" xml:space="preserve">
     <value>No context type was specified. Ensure the form data from the request includes a 'context' value, specifying the context type name to apply migrations for.</value>

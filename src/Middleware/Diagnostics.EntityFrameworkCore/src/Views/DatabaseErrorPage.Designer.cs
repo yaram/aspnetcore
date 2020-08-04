@@ -348,37 +348,34 @@ body .titleerror {
 #line default
 #line hidden
 #nullable disable
-            WriteLiteral("                    </ul>\r\n                    <p>\r\n                        <button id=\"applyMigrations\"");
-            BeginWriteAttribute("onclick", " onclick=\"", 4262, "\"", 4355, 3);
-            WriteAttributeValue("", 4272, "ApplyMigrations(\'", 4272, 17, true);
+            WriteLiteral("                    </ul>\r\n");
+            WriteLiteral("                    <p>\r\n                        <button id=\"applyMigrations\" onclick=\"ApplyMigrations()\" data-assemblyname=\"");
 #nullable restore
-#line 167 "DatabaseErrorPage.cshtml"
-WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQualifiedName)), 4289, 64, false);
+#line 168 "DatabaseErrorPage.cshtml"
+                                                                                               Write(JavaScriptEncode(context.Type.AssemblyQualifiedName));
 
 #line default
 #line hidden
 #nullable disable
-            WriteAttributeValue("", 4353, "\')", 4353, 2, true);
-            EndWriteAttribute();
-            WriteLiteral(">");
+            WriteLiteral("\">");
 #nullable restore
-#line 167 "DatabaseErrorPage.cshtml"
-                                                                                                                                              Write(Strings.DatabaseErrorPage_ApplyMigrationsButton);
+#line 168 "DatabaseErrorPage.cshtml"
+                                                                                                                                                      Write(Strings.DatabaseErrorPage_ApplyMigrationsButton);
 
 #line default
 #line hidden
 #nullable disable
             WriteLiteral("</button>\r\n                        <span id=\"applyMigrationsError\" class=\"error\"></span>\r\n                        <span id=\"applyMigrationsSuccess\"></span>\r\n                    </p>\r\n");
 #nullable restore
-#line 171 "DatabaseErrorPage.cshtml"
+#line 172 "DatabaseErrorPage.cshtml"
                 }
 
 #line default
 #line hidden
 #nullable disable
-            WriteLiteral("\r\n                <script>\r\n                function ApplyMigrations(typeName) {\r\n                    applyMigrations.disabled = true;\r\n                    applyMigrationsError.innerHTML = \"\";\r\n                    applyMigrations.innerHTML = \"");
+            WriteLiteral("\r\n                <script>\r\n                function ApplyMigrations() {\r\n                    applyMigrations.disabled = true;\r\n                    applyMigrationsError.innerHTML = \"\";\r\n                    applyMigrations.innerHTML = \"");
 #nullable restore
-#line 177 "DatabaseErrorPage.cshtml"
+#line 178 "DatabaseErrorPage.cshtml"
                                             Write(JavaScriptEncode(Strings.DatabaseErrorPage_ApplyMigrationsButtonRunning));
 
 #line default
@@ -386,7 +383,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("\";\r\n\r\n                    var req = new XMLHttpRequest();\r\n\r\n                    req.onload = function (e) {\r\n                        if (req.status === 204) {\r\n                            applyMigrations.innerHTML = \"");
 #nullable restore
-#line 183 "DatabaseErrorPage.cshtml"
+#line 184 "DatabaseErrorPage.cshtml"
                                                     Write(JavaScriptEncode(Strings.DatabaseErrorPage_ApplyMigrationsButtonDone));
 
 #line default
@@ -394,7 +391,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("\";\r\n                            applyMigrationsSuccess.innerHTML = \"");
 #nullable restore
-#line 184 "DatabaseErrorPage.cshtml"
+#line 185 "DatabaseErrorPage.cshtml"
                                                            Write(JavaScriptEncode(Strings.DatabaseErrorPage_MigrationsAppliedRefresh));
 
 #line default
@@ -410,10 +407,10 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
                         ErrorApplyingMigrations();
                     };
 
-                    var formBody = ""context="" + typeName;
+                    var formBody = ""context="" + encodeURIComponent(document.getElementById('applyMigrations').getAttribute('data-assemblyname'));
                     req.open(""POST"", """);
 #nullable restore
-#line 195 "DatabaseErrorPage.cshtml"
+#line 196 "DatabaseErrorPage.cshtml"
                                  Write(JavaScriptEncode(Model.Options.MigrationsEndPointPath.Value));
 
 #line default
@@ -427,7 +424,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
                 function ErrorApplyingMigrations() {
                     applyMigrations.innerHTML = """);
 #nullable restore
-#line 201 "DatabaseErrorPage.cshtml"
+#line 202 "DatabaseErrorPage.cshtml"
                                             Write(JavaScriptEncode(Strings.DatabaseErrorPage_ApplyMigrationsButton));
 
 #line default
@@ -435,7 +432,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("\";\r\n                    applyMigrationsError.innerHTML = \"");
 #nullable restore
-#line 202 "DatabaseErrorPage.cshtml"
+#line 203 "DatabaseErrorPage.cshtml"
                                                  Write(JavaScriptEncode(Strings.DatabaseErrorPage_ApplyMigrationsFailed));
 
 #line default
@@ -443,7 +440,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("\";\r\n                    applyMigrations.disabled = false;\r\n                }\r\n                </script>\r\n\r\n                <p>");
 #nullable restore
-#line 207 "DatabaseErrorPage.cshtml"
+#line 208 "DatabaseErrorPage.cshtml"
               Write(Strings.DatabaseErrorPage_HowToApplyFromPMC);
 
 #line default
@@ -451,7 +448,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</p>\r\n                <code>");
 #nullable restore
-#line 208 "DatabaseErrorPage.cshtml"
+#line 209 "DatabaseErrorPage.cshtml"
                  Write(Strings.DatabaseErrorPage_ApplyMigrationsCommandPMC);
 
 #line default
@@ -459,7 +456,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</code>\r\n                <p>");
 #nullable restore
-#line 209 "DatabaseErrorPage.cshtml"
+#line 210 "DatabaseErrorPage.cshtml"
               Write(Strings.DatabaseErrorPage_HowToApplyFromCLI);
 
 #line default
@@ -467,7 +464,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</p>\r\n                <code>");
 #nullable restore
-#line 210 "DatabaseErrorPage.cshtml"
+#line 211 "DatabaseErrorPage.cshtml"
                  Write(Strings.DatabaseErrorPage_ApplyMigrationsCommandCLI);
 
 #line default
@@ -475,7 +472,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</code>\r\n                <hr />\r\n            </div>\r\n");
 #nullable restore
-#line 213 "DatabaseErrorPage.cshtml"
+#line 214 "DatabaseErrorPage.cshtml"
         }
 
         var contextWithPendingModelChanges = Model.ContextDetails.Where(c => c.PendingModelChanges);
@@ -487,7 +484,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("            <div>\r\n                <h2>");
 #nullable restore
-#line 219 "DatabaseErrorPage.cshtml"
+#line 220 "DatabaseErrorPage.cshtml"
                Write(Strings.DatabaseErrorPage_PendingChangesTitle);
 
 #line default
@@ -495,7 +492,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</h2>\r\n                <p>");
 #nullable restore
-#line 220 "DatabaseErrorPage.cshtml"
+#line 221 "DatabaseErrorPage.cshtml"
               Write(Strings.DatabaseErrorPage_PendingChangesInfo);
 
 #line default
@@ -503,7 +500,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</p>\r\n                <ul>\r\n");
 #nullable restore
-#line 222 "DatabaseErrorPage.cshtml"
+#line 223 "DatabaseErrorPage.cshtml"
                      foreach (var context in contextWithPendingModelChanges)
                     {
 
@@ -512,7 +509,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("                        <li>");
 #nullable restore
-#line 224 "DatabaseErrorPage.cshtml"
+#line 225 "DatabaseErrorPage.cshtml"
                        Write(context.Type.Name);
 
 #line default
@@ -520,7 +517,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</li>\r\n");
 #nullable restore
-#line 225 "DatabaseErrorPage.cshtml"
+#line 226 "DatabaseErrorPage.cshtml"
                     }
 
 #line default
@@ -528,7 +525,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("                </ul>\r\n                <p>");
 #nullable restore
-#line 227 "DatabaseErrorPage.cshtml"
+#line 228 "DatabaseErrorPage.cshtml"
               Write(Strings.DatabaseErrorPage_PendingChangesInfoPMC);
 
 #line default
@@ -536,7 +533,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</p>\r\n                <code>");
 #nullable restore
-#line 228 "DatabaseErrorPage.cshtml"
+#line 229 "DatabaseErrorPage.cshtml"
                  Write(Strings.DatabaseErrorPage_AddMigrationCommandPMC);
 
 #line default
@@ -544,7 +541,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</code>\r\n                <br />\r\n                <code>");
 #nullable restore
-#line 230 "DatabaseErrorPage.cshtml"
+#line 231 "DatabaseErrorPage.cshtml"
                  Write(Strings.DatabaseErrorPage_ApplyMigrationsCommandPMC);
 
 #line default
@@ -552,7 +549,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</code>\r\n                <p>");
 #nullable restore
-#line 231 "DatabaseErrorPage.cshtml"
+#line 232 "DatabaseErrorPage.cshtml"
               Write(Strings.DatabaseErrorPage_PendingChangesInfoCLI);
 
 #line default
@@ -560,7 +557,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</p>\r\n                <code>");
 #nullable restore
-#line 232 "DatabaseErrorPage.cshtml"
+#line 233 "DatabaseErrorPage.cshtml"
                  Write(Strings.DatabaseErrorPage_AddMigrationCommandCLI);
 
 #line default
@@ -568,7 +565,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</code>\r\n                <br />\r\n                <code>");
 #nullable restore
-#line 234 "DatabaseErrorPage.cshtml"
+#line 235 "DatabaseErrorPage.cshtml"
                  Write(Strings.DatabaseErrorPage_ApplyMigrationsCommandCLI);
 
 #line default
@@ -576,7 +573,7 @@ WriteAttributeValue("", 4289, JavaScriptEncode(UrlEncode(context.Type.AssemblyQu
 #nullable disable
             WriteLiteral("</code>\r\n                <hr />\r\n            </div>\r\n");
 #nullable restore
-#line 237 "DatabaseErrorPage.cshtml"
+#line 238 "DatabaseErrorPage.cshtml"
         }
     
 

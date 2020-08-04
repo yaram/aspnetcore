@@ -13,7 +13,7 @@ namespace Microsoft.AspNetCore
         {
             return app =>
             {
-                app.UseMigrationsEndPoint();
+                //app.UseMigrationsEndPoint();
                 next(app);
             };
         }

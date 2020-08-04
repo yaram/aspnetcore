@@ -109,7 +109,7 @@ namespace Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
         private static async Task<DbContext> GetDbContext(HttpContext context, ILogger logger)
         {
             var form = await context.Request.ReadFormAsync();
-            var contextTypeName = form["context"].ToString().Trim(); // Bug? Razor pages adds a leading and trailing space
+            var contextTypeName = form["context"];
 
             // TODO: Decouple
             // Look for DbContext classes registered in the service provider

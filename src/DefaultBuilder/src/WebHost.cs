@@ -5,8 +5,8 @@ using System;
 using System.IO;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore;
+//using Microsoft.AspNetCore.Diagnostics;
+//using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore;
 using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
@@ -262,11 +262,11 @@ namespace Microsoft.AspNetCore
 
                 services.AddRouting();
 
-                if (hostingContext.HostingEnvironment.IsDevelopment())
-                {
-                    services.AddSingleton<IDeveloperPageExceptionFilter, DatabaseErrorHandler>();
-                    services.AddTransient<IStartupFilter, MigrationsEndPointStartupFilter>();
-                }
+                //if (hostingContext.HostingEnvironment.IsDevelopment())
+                //{
+                //    services.AddSingleton<IDeveloperPageExceptionFilter, DatabaseErrorHandler>();
+                //    services.AddTransient<IStartupFilter, MigrationsEndPointStartupFilter>();
+                //}
             })
             .UseIIS()
             .UseIISIntegration();

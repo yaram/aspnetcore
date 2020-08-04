@@ -180,13 +180,13 @@ namespace Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
 
                                 if (pendingModelChanges || pendingMigrations.Length > 0)
                                 {
-                                    var page = new DatabaseErrorPage
-                                    {
-                                        Model = new DatabaseErrorPageModel(
-                                            contextType, exception, databaseExists, pendingModelChanges, pendingMigrations, _options)
-                                    };
+                                    //var page = new DatabaseErrorPage
+                                    //{
+                                    //    Model = new DatabaseErrorPageModel(
+                                    //        contextType, exception, databaseExists, pendingModelChanges, pendingMigrations, _options)
+                                    //};
 
-                                    await page.ExecuteAsync(httpContext);
+                                    //await page.ExecuteAsync(httpContext);
 
                                     return;
                                 }

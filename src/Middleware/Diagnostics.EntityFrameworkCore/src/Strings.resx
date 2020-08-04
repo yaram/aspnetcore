@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -148,19 +148,19 @@
     <value>In Visual Studio, use the Package Manager Console to scaffold a new migration and apply it to the database:</value>
   </data>
   <data name="DatabaseErrorPage_NoDbOrMigrationsTitle" xml:space="preserve">
-    <value>Use migrations to create the database for {0}</value>
+    <value>Use migrations to create the database</value>
   </data>
   <data name="DatabaseErrorPage_PendingChangesInfoPMC" xml:space="preserve">
     <value>In Visual Studio, use the Package Manager Console to scaffold a new migration for these changes and apply them to the database:</value>
   </data>
   <data name="DatabaseErrorPage_PendingChangesTitle" xml:space="preserve">
-    <value>There are pending model changes for {0}</value>
+    <value>There are pending model changes</value>
   </data>
   <data name="DatabaseErrorPage_PendingMigrationsInfo" xml:space="preserve">
-    <value>There are migrations for {0} that have not been applied to the database</value>
+    <value>There are migrations that have not been applied to the following database(s):</value>
   </data>
   <data name="DatabaseErrorPage_PendingMigrationsTitle" xml:space="preserve">
-    <value>Applying existing migrations for {0} may resolve this issue</value>
+    <value>Applying existing migrations may resolve this issue</value>
   </data>
   <data name="DatabaseErrorPage_ApplyMigrationsCommandCLI" xml:space="preserve">
     <value>&gt; dotnet ef database update</value>
@@ -197,5 +197,11 @@
   </data>
   <data name="DatabaseErrorPage_HowToApplyFromCLI" xml:space="preserve">
     <value>Alternatively, you can apply pending migrations from a command prompt at your project directory:</value>
+  </data>
+  <data name="DatabaseErrorPage_NoDbOrMigrationsInfo" xml:space="preserve">
+    <value>A database need to be created for the following:</value>
+  </data>
+  <data name="DatabaseErrorPage_PendingChangesInfo" xml:space="preserve">
+    <value>Pending model changes are detected in the following:</value>
   </data>
 </root>

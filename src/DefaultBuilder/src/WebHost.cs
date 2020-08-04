@@ -265,6 +265,7 @@ namespace Microsoft.AspNetCore
                 if (hostingContext.HostingEnvironment.IsDevelopment())
                 {
                     services.AddSingleton<IDeveloperPageExceptionFilter, DatabaseErrorHandler>();
+                    services.AddTransient<IStartupFilter, MigrationsEndPointStartupFilter>();
                 }
             })
             .UseIIS()

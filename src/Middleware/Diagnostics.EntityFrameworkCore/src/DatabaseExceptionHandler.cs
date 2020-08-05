@@ -49,74 +49,15 @@ namespace Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
 
                         foreach (var registeredContext in registeredContexts)
                         {
-                            // TODO: Decouple
-                            var context = (DbContext)errorContext.HttpContext.RequestServices.GetService(registeredContext);
-                            // TODO: Decouple
-                            var relationalDatabaseCreator = context.GetService<IDatabaseCreator>() as IRelationalDatabaseCreator;
-                            if (relationalDatabaseCreator == null)
+                            var details = await errorContext.HttpContext.GetContextDetailsAsync(registeredContext, _logger);
+
+                            if (details != null)
                             {
-                                _logger.NotRelationalDatabase();
-                            }
-                            else
-                            {
-                                var databaseExists = await relationalDatabaseCreator.ExistsAsync();
-
-                                if (databaseExists)
-                                {
-                                    databaseExists = await relationalDatabaseCreator.HasTablesAsync();
-                                }
-
-                                // TODO: Decouple
-                                var migrationsAssembly = context.GetService<IMigrationsAssembly>();
-                                // TODO: Decouple
-                                var modelDiffer = context.GetService<IMigrationsModelDiffer>();
-
-                                var snapshotModel = migrationsAssembly.ModelSnapshot?.Model;
-                                // TODO: Decouple
-                                if (snapshotModel is IConventionModel conventionModel)
-                                {
-                                    // TODO: Decouple
-                                    var conventionSet = context.GetService<IConventionSetBuilder>().CreateConventionSet();
-
-                                    // TODO: Decouple
-                                    var typeMappingConvention = conventionSet.ModelFinalizingConventions.OfType<TypeMappingConvention>().FirstOrDefault();
-                                    if (typeMappingConvention != null)
-                                    {
-                                        typeMappingConvention.ProcessModelFinalizing(conventionModel.Builder, null);
-                                    }
-
-                                    // TODO: Decouple
-                                    var relationalModelConvention = conventionSet.ModelFinalizedConventions.OfType<RelationalModelConvention>().FirstOrDefault();
-                                    if (relationalModelConvention != null)
-                                    {
-                                        snapshotModel = relationalModelConvention.ProcessModelFinalized(conventionModel);
-                                    }
-                                }
-
-                                // TODO: Decouple
-                                if (snapshotModel is IMutableModel mutableModel)
-                                {
-                                    snapshotModel = mutableModel.FinalizeModel();
-                                }
-
-                                // HasDifferences will return true if there is no model snapshot, but if there is an existing database
-                                // and no model snapshot then we don't want to show the error page since they are most likely targeting
-                                // and existing database and have just misconfigured their model
-
-                                contextDetails.Add(new DatabaseContextDetails
-                                {
-                                    Type = registeredContext,
-                                    DatabaseExists = databaseExists,
-                                    PendingModelChanges = (!databaseExists || migrationsAssembly.ModelSnapshot != null)
-                                        && modelDiffer.HasDifferences(snapshotModel?.GetRelationalModel(), context.Model.GetRelationalModel()),
-                                    PendingMigrations = databaseExists
-                                        ? await context.Database.GetPendingMigrationsAsync()
-                                        : context.Database.GetMigrations()
-                                });
+                                contextDetails.Add(details);
                             }
                         }
 
-                        if (contextDetails.Count > 0)
+                        if (contextDetails.Any(c => c.PendingModelChanges || c.PendingMigrations.Any()))
                         {
                             var page = new DatabaseErrorPage
                             {
@@ -124,6 +65,7 @@ namespace Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
                             };
 
                             await page.ExecuteAsync(errorContext.HttpContext);
+                            return;
                         }
                     }
                 }

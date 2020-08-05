@@ -135,7 +135,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
                 // Unwrap the server so we can create an http context and process the request
                 server = (IISHttpServer)GCHandle.FromIntPtr(pvRequestContext).Target;
 
-                var context = server._iisContextFactory.CreateHttpContext(pInProcessHandler);
+                var context = server?._iisContextFactory.CreateHttpContext(pInProcessHandler);
 
                 ThreadPool.UnsafeQueueUserWorkItem(context, preferLocal: false);
 
@@ -155,7 +155,7 @@ namespace Microsoft.AspNetCore.Server.IIS.Core
             try
             {
                 server = (IISHttpServer)GCHandle.FromIntPtr(pvRequestContext).Target;
-                server._applicationLifetime.StopApplication();
+                server?._applicationLifetime.StopApplication();
             }
             catch (Exception ex)
             {
